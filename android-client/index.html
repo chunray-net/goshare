@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoShare 安卓客户端</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+        <!-- 引入 JavaScript 模块 -->
+        <script src="assets/js/error-handler.js"></script>
+        <script src="assets/js/tcp-socket.js"></script>
+        <script src="assets/js/file-manager.js"></script>
+        <script src="assets/js/ui-manager.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>GoShare 安卓客户端</h1>
+        
+        <div class="form-group">
+            <label for="serverAddr">服务器地址</label>
+            <input type="text" id="serverAddr" placeholder="例如: 192.168.1.100:9000">
+        </div>
+
+        <div class="form-group">
+            <button class="btn" id="connectBtn">连接服务器</button>
+            <button class="btn btn-secondary" id="disconnectBtn">断开连接</button>
+            <span class="connection-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="connectionStatus">未连接</span>
+            </span>
+        </div>
+
+        <div id="mainControls" class="hidden">
+            <div class="breadcrumb">
+                当前路径: <span id="currentPath">/</span>
+                <span id="pathLinks"></span>
+            </div>
+
+            <div class="form-group">
+                <button class="btn" id="refreshBtn">刷新文件列表</button>
+                <button class="btn btn-secondary" id="mkdirBtn">创建文件夹</button>
+                <button class="btn btn-secondary" id="uploadBtn">上传文件</button>
+            </div>
+
+            <div id="mkdirForm" class="form-container hidden">
+                <h3>创建文件夹</h3>
+                <div class="form-group">
+                    <label for="newDirName">文件夹名称</label>
+                    <input type="text" id="newDirName" placeholder="输入文件夹名称">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-success" id="createDirBtn">创建</button>
+                    <button class="btn btn-secondary" id="cancelDirBtn">取消</button>
+                </div>
+            </div>
+
+            <div id="uploadForm" class="form-container hidden">
+                <h3>上传文件</h3>
+                <div class="form-group">
+                    <label for="fileInput">选择文件</label>
+                    <input type="file" id="fileInput">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-success" id="uploadFileBtn">上传</button>
+                    <button class="btn btn-secondary" id="cancelUploadBtn">取消</button>
+                </div>
+                <div class="progress-bar" id="uploadProgress">
+                    <div class="progress-fill" id="uploadProgressFill"></div>
+                </div>
+            </div>
+
+            <div class="file-list">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>名称</th>
+                            <th>类型</th>
+                            <th>大小</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fileTableBody">
+                        <!-- 文件列表将在这里动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="statusMessage" class="status"></div>
+    </div>
+
+    <script>
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            // 创建 TCP Socket 客户端
+            const client = new GoShareClient();
+            
+            // 创建文件管理器
+            const fileManager = new FileManager(client);
+            
+            // 创建 UI 管理器
+            const uiManager = new UIManager(fileManager);
+            
+            // 将 uiManager 暴露到全局作用域，供 HTML 中的 onclick 使用
+            window.uiManager = uiManager;
+            
+            // 初始化 UI
+            uiManager.init();
+            
+            // 设置全局函数，保持向后兼容
+            window.connectToServer = function() {
+                const address = document.getElementById('serverAddr').value.trim();
+                if (address) {
+                    uiManager.connectToServer(address);
+                }
+            };
+            
+            window.disconnectServer = function() {
+                uiManager.disconnectServer();
+            };
+            
+            window.listFiles = function() {
+                uiManager.refreshFileList();
+            };
+            
+            window.showMkdirForm = function() {
+                uiManager.showMkdirForm();
+            };
+            
+            window.hideMkdirForm = function() {
+                uiManager.hideMkdirForm();
+            };
+            
+            window.createDirectory = function() {
+                uiManager.createDirectory();
+            };
+            
+            window.showUploadForm = function() {
+                uiManager.showUploadForm();
+            };
+            
+            window.hideUploadForm = function() {
+                uiManager.hideUploadForm();
+            };
+            
+            window.uploadFile = function() {
+                uiManager.uploadFile();
+            };
+            
+            window.downloadFile = function(filename) {
+                uiManager.downloadFile(filename);
+            };
+            
+            window.deleteFile = function(filename) {
+                uiManager.deleteFile(filename);
+            };
+            
+            window.deleteDirectory = function(dirname) {
+                uiManager.deleteDirectory(dirname);
+            };
+            
+            window.openDirectory = function(dirname) {
+                uiManager.openDirectory(dirname);
+            };
+            
+            window.goUpDirectory = function() {
+                uiManager.goUpDirectory();
+            };
+            
+            window.navigateToPath = function(path) {
+                uiManager.navigateToPath(path);
+            };
+            
+            // 添加一些辅助函数
+            window.showStatus = function(message, isSuccess) {
+                uiManager.showStatus(message, isSuccess);
+            };
+            
+            window.formatFileSize = function(bytes) {
+                return fileManager.formatFileSize(bytes);
+            };
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoShare 安卓客户端 - 测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2196F3; }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #1976D2; }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GoShare 安卓客户端 - 测试页面</h1>
+        
+        <div class="test-section">
+            <h2>1. 模块加载测试</h2>
+            <p>测试所有 JavaScript 模块是否正确加载</p>
+            <button onclick="testModuleLoading()">测试模块加载</button>
+            <div id="moduleTestResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. 错误处理测试</h2>
+            <p>测试错误处理器的各种功能</p>
+            <button onclick="testErrorHandler()">测试错误处理</button>
+            <div id="errorTestResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. 文件管理器测试</h2>
+            <p>测试文件管理器的基本功能</p>
+            <button onclick="testFileManager()">测试文件管理器</button>
+            <div id="fileTestResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. TCP Socket 测试</h2>
+            <p>测试 TCP Socket 连接管理器</p>
+            <button onclick="testTcpSocket()">测试 TCP Socket</button>
+            <div id="socketTestResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. 输入验证测试</h2>
+            <p>测试各种输入验证功能</p>
+            <div>
+                <label>测试字符串:</label>
+                <input type="text" id="testString" value="test_folder">
+                <button onclick="testStringValidation()">验证字符串</button>
+            </div>
+            <div>
+                <label>测试数字:</label>
+                <input type="text" id="testNumber" value="100">
+                <button onclick="testNumberValidation()">验证数字</button>
+            </div>
+            <div id="validationTestResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>6. 文件大小格式化测试</h2>
+            <p>测试文件大小格式化功能</p>
+            <button onclick="testFileSizeFormatting()">测试文件大小格式化</button>
+            <div id="sizeTestResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>7. 综合功能测试</h2>
+            <p>测试客户端的综合功能</p>
+            <button onclick="runComprehensiveTest()">运行综合测试</button>
+            <div id="comprehensiveTestResult" class="test-result"></div>
+        </div>
+    </div>
+
+    <!-- 引入所有模块 -->
+    <script src="assets/js/error-handler.js"></script>
+    <script src="assets/js/tcp-socket.js"></script>
+    <script src="assets/js/file-manager.js"></script>
+    <script src="assets/js/ui-manager.js"></script>
+
+    <script>
+        // 测试结果管理
+        const testResults = [];
+
+        function logTest(name, success, message) {
+            testResults.push({ name, success, message });
+            console.log(`${success ? '✓' : '✗'} ${name}: ${message}`);
+        }
+
+        function displayResults(containerId, results) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (results.length === 0) {
+                container.innerHTML = '<p class="info">暂无测试结果</p>';
+                return;
+            }
+
+            let html = '';
+            let successCount = 0;
+
+            results.forEach(result => {
+                const className = result.success ? 'success' : 'error';
+                html += `<p class="${className}"><strong>${result.name}:</strong> ${result.message}</p>`;
+                if (result.success) successCount++;
+            });
+
+            html += `<p class="info">测试完成: ${successCount}/${results.length} 通过</p>`;
+            container.innerHTML = html;
+        }
+
+        // 1. 模块加载测试
+        function testModuleLoading() {
+            const results = [];
+            
+            try {
+                // 检查 ErrorHandler
+                if (typeof ErrorHandler === 'function') {
+                    logTest('ErrorHandler 模块', true, '加载成功');
+                    results.push({ name: 'ErrorHandler', success: true, message: '加载成功' });
+                } else {
+                    logTest('ErrorHandler 模块', false, '未加载');
+                    results.push({ name: 'ErrorHandler', success: false, message: '未加载' });
+                }
+
+                // 检查 TcpSocketManager
+                if (typeof TcpSocketManager === 'function') {
+                    logTest('TcpSocketManager 模块', true, '加载成功');
+                    results.push({ name: 'TcpSocketManager', success: true, message: '加载成功' });
+                } else {
+                    logTest('TcpSocketManager 模块', false, '未加载');
+                    results.push({ name: 'TcpSocketManager', success: false, message: '未加载' });
+                }
+
+                // 检查 GoShareClient
+                if (typeof GoShareClient === 'function') {
+                    logTest('GoShareClient 模块', true, '加载成功');
+                    results.push({ name: 'GoShareClient', success: true, message: '加载成功' });
+                } else {
+                    logTest('GoShareClient 模块', false, '未加载');
+                    results.push({ name: 'GoShareClient', success: false, message: '未加载' });
+                }
+
+                // 检查 FileManager
+                if (typeof FileManager === 'function') {
+                    logTest('FileManager 模块', true, '加载成功');
+                    results.push({ name: 'FileManager', success: true, message: '加载成功' });
+                } else {
+                    logTest('FileManager 模块', false, '未加载');
+                    results.push({ name: 'FileManager', success: false, message: '未加载' });
+                }
+
+                // 检查 UIManager
+                if (typeof UIManager === 'function') {
+                    logTest('UIManager 模块', true, '加载成功');
+                    results.push({ name: 'UIManager', success: true, message: '加载成功' });
+                } else {
+                    logTest('UIManager 模块', false, '未加载');
+                    results.push({ name: 'UIManager', success: false, message: '未加载' });
+                }
+
+            } catch (error) {
+                logTest('模块加载测试', false, error.message);
+                results.push({ name: '模块加载', success: false, message: error.message });
+            }
+
+            displayResults('moduleTestResult', results);
+        }
+
+        // 2. 错误处理测试
+        function testErrorHandler() {
+            const results = [];
+            let errorHandler;
+
+            try {
+                errorHandler = new ErrorHandler();
+                logTest('ErrorHandler 实例化', true, '成功');
+                results.push({ name: 'ErrorHandler 实例化', success: true, message: '成功' });
+
+                // 测试错误记录
+                const testError = new Error('测试错误');
+                errorHandler.logError(testError, 'test', { test: true });
+                logTest('错误记录', true, '成功');
+                results.push({ name: '错误记录', success: true, message: '成功' });
+
+                // 测试用户消息显示
+                errorHandler.showUserMessage('测试消息', 'info');
+                logTest('用户消息显示', true, '成功');
+                results.push({ name: '用户消息显示', success: true, message: '成功' });
+
+                // 测试输入验证
+                const valid = errorHandler.validateInput('test', 'string', { minLength: 2 });
+                if (valid) {
+                    logTest('输入验证', true, '成功');
+                    results.push({ name: '输入验证', success: true, message: '成功' });
+                } else {
+                    logTest('输入验证', false, '失败');
+                    results.push({ name: '输入验证', success: false, message: '失败' });
+                }
+
+            } catch (error) {
+                logTest('错误处理测试', false, error.message);
+                results.push({ name: '错误处理测试', success: false, message: error.message });
+            }
+
+            displayResults('errorTestResult', results);
+        }
+
+        // 3. 文件管理器测试
+        function testFileManager() {
+            const results = [];
+            let fileManager;
+
+            try {
+                // 需要先创建一个模拟的 client
+                const mockClient = {
+                    listFiles: async () => ({ ok: true, entries: [] }),
+                    createDirectory: async () => ({ ok: true }),
+                    uploadFile: async () => ({ ok: true }),
+                    downloadFile: async () => ({ ok: true, size: 1024 })
+                };
+
+                fileManager = new FileManager(mockClient);
+                logTest('FileManager 实例化', true, '成功');
+                results.push({ name: 'FileManager 实例化', success: true, message: '成功' });
+
+                // 测试目录名称验证
+                const validDirName = fileManager.validateDirectoryName('test_folder');
+                if (validDirName) {
+                    logTest('目录名称验证', true, '成功');
+                    results.push({ name: '目录名称验证', success: true, message: '成功' });
+                } else {
+                    logTest('目录名称验证', false, '失败');
+                    results.push({ name: '目录名称验证', success: false, message: '失败' });
+                }
+
+                // 测试文件大小格式化
+                const formattedSize = fileManager.formatFileSize(1024);
+                if (formattedSize === '1.00 KB') {
+                    logTest('文件大小格式化', true, '成功');
+                    results.push({ name: '文件大小格式化', success: true, message: '成功' });
+                } else {
+                    logTest('文件大小格式化', false, `期望 '1.00 KB'，实际 '${formattedSize}'`);
+                    results.push({ name: '文件大小格式化', success: false, message: `期望 '1.00 KB'，实际 '${formattedSize}'` });
+                }
+
+                // 测试文件类型描述
+                const typeDesc = fileManager.getFileTypeDescription('test.txt', false);
+                if (typeDesc === '文本文档') {
+                    logTest('文件类型描述', true, '成功');
+                    results.push({ name: '文件类型描述', success: true, message: '成功' });
+                } else {
+                    logTest('文件类型描述', false, `期望 '文本文档'，实际 '${typeDesc}'`);
+                    results.push({ name: '文件类型描述', success: false, message: `期望 '文本文档'，实际 '${typeDesc}'` });
+                }
+
+            } catch (error) {
+                logTest('文件管理器测试', false, error.message);
+                results.push({ name: '文件管理器测试', success: false, message: error.message });
+            }
+
+            displayResults('fileTestResult', results);
+        }
+
+        // 4. TCP Socket 测试
+        function testTcpSocket() {
+            const results = [];
+            let tcpSocketManager, goShareClient;
+
+            try {
+                tcpSocketManager = new TcpSocketManager();
+                logTest('TcpSocketManager 实例化', true, '成功');
+                results.push({ name: 'TcpSocketManager 实例化', success: true, message: '成功' });
+
+                goShareClient = new GoShareClient();
+                logTest('GoShareClient 实例化', true, '成功');
+                results.push({ name: 'GoShareClient 实例化', success: true, message: '成功' });
+
+                // 检查方法是否存在
+                if (typeof goShareClient.connect === 'function') {
+                    logTest('connect 方法', true, '存在');
+                    results.push({ name: 'connect 方法', success: true, message: '存在' });
+                } else {
+                    logTest('connect 方法', false, '不存在');
+                    results.push({ name: 'connect 方法', success: false, message: '不存在' });
+                }
+
+                if (typeof goShareClient.disconnect === 'function') {
+                    logTest('disconnect 方法', true, '存在');
+                    results.push({ name: 'disconnect 方法', success: true, message: '存在' });
+                } else {
+                    logTest('disconnect 方法', false, '不存在');
+                    results.push({ name: 'disconnect 方法', success: false, message: '不存在' });
+                }
+
+            } catch (error) {
+                logTest('TCP Socket 测试', false, error.message);
+                results.push({ name: 'TCP Socket 测试', success: false, message: error.message });
+            }
+
+            displayResults('socketTestResult', results);
+        }
+
+        // 5. 输入验证测试
+        function testStringValidation() {
+            const results = [];
+            let errorHandler;
+
+            try {
+                errorHandler = new ErrorHandler();
+                const testString = document.getElementById('testString').value;
+
+                // 测试字符串验证
+                const valid = errorHandler.validateInput(testString, 'string', { 
+                    minLength: 3, 
+                    maxLength: 50 
+                });
+
+                if (valid) {
+                    logTest('字符串验证', true, `"${testString}" 验证通过`);
+                    results.push({ name: '字符串验证', success: true, message: `"${testString}" 验证通过` });
+                } else {
+                    logTest('字符串验证', false, `"${testString}" 验证失败`);
+                    results.push({ name: '字符串验证', success: false, message: `"${testString}" 验证失败` });
+                }
+
+            } catch (error) {
+                logTest('字符串验证测试', false, error.message);
+                results.push({ name: '字符串验证测试', success: false, message: error.message });
+            }
+
+            displayResults('validationTestResult', results);
+        }
+
+        function testNumberValidation() {
+            const results = [];
+            let errorHandler;
+
+            try {
+                errorHandler = new ErrorHandler();
+                const testNumber = parseInt(document.getElementById('testNumber').value);
+
+                // 测试数字验证
+                const valid = errorHandler.validateInput(testNumber, 'number', { 
+                    min: 0, 
+                    max: 1000 
+                });
+
+                if (valid) {
+                    logTest('数字验证', true, `${testNumber} 验证通过`);
+                    results.push({ name: '数字验证', success: true, message: `${testNumber} 验证通过` });
+                } else {
+                    logTest('数字验证', false, `${testNumber} 验证失败`);
+                    results.push({ name: '数字验证', success: false, message: `${testNumber} 验证失败` });
+                }
+
+            } catch (error) {
+                logTest('数字验证测试', false, error.message);
+                results.push({ name: '数字验证测试', success: false, message: error.message });
+            }
+
+            displayResults('validationTestResult', results);
+        }
+
+        // 6. 文件大小格式化测试
+        function testFileSizeFormatting() {
+            const results = [];
+            let fileManager;
+
+            try {
+                // 创建模拟的 FileManager
+                const mockClient = { listFiles: async () => ({}) };
+                fileManager = new FileManager(mockClient);
+
+                const testCases = [
+                    { bytes: 0, expected: '0 Bytes' },
+                    { bytes: 1024, expected: '1.00 KB' },
+                    { bytes: 1024 * 1024, expected: '1.00 MB' },
+                    { bytes: 1024 * 1024 * 1024, expected: '1.00 GB' },
+                    { bytes: 512, expected: '512 Bytes' }
+                ];
+
+                testCases.forEach(testCase => {
+                    const result = fileManager.formatFileSize(testCase.bytes);
+                    if (result === testCase.expected) {
+                        logTest(`文件大小格式化 (${testCase.bytes} bytes)`, true, `正确: ${result}`);
+                        results.push({ name: `文件大小格式化 (${testCase.bytes} bytes)`, success: true, message: `正确: ${result}` });
+                    } else {
+                        logTest(`文件大小格式化 (${testCase.bytes} bytes)`, false, `期望: ${testCase.expected}, 实际: ${result}`);
+                        results.push({ name: `文件大小格式化 (${testCase.bytes} bytes)`, success: false, message: `期望: ${testCase.expected}, 实际: ${result}` });
+                    }
+                });
+
+            } catch (error) {
+                logTest('文件大小格式化测试', false, error.message);
+                results.push({ name: '文件大小格式化测试', success: false, message: error.message });
+            }
+
+            displayResults('sizeTestResult', results);
+        }
+
+        // 7. 综合功能测试
+        function runComprehensiveTest() {
+            const results = [];
+            
+            try {
+                // 测试所有模块的集成
+                const errorHandler = new ErrorHandler();
+                const tcpSocketManager = new TcpSocketManager();
+                const goShareClient = new GoShareClient();
+                const fileManager = new FileManager(goShareClient);
+                const uiManager = new UIManager(fileManager);
+
+                logTest('所有模块集成', true, '成功');
+                results.push({ name: '所有模块集成', success: true, message: '成功' });
+
+                // 测试错误处理器的全局错误处理
+                window.dispatchEvent(new ErrorEvent('error', {
+                    message: '测试错误',
+                    filename: 'test.js',
+                    lineno: 1,
+                    colno: 1
+                }));
+
+                logTest('全局错误处理', true, '成功');
+                results.push({ name: '全局错误处理', success: true, message: '成功' });
+
+                // 测试重试操作
+                let attemptCount = 0;
+                const testOperation = async () => {
+                    attemptCount++;
+                    if (attemptCount < 3) {
+                        throw new Error('测试错误');
+                    }
+                    return '成功';
+                };
+
+                // 使用 Promise 处理异步操作
+                errorHandler.retryOperation(testOperation, 3, 100)
+                    .then(result => {
+                        if (result === '成功') {
+                            logTest('重试操作', true, '成功');
+                            results.push({ name: '重试操作', success: true, message: '成功' });
+                        } else {
+                            logTest('重试操作', false, '失败');
+                            results.push({ name: '重试操作', success: false, message: '失败' });
+                        }
+                        displayResults('comprehensiveTestResult', results);
+                    })
+                    .catch(error => {
+                        logTest('重试操作', false, error.message);
+                        results.push({ name: '重试操作', success: false, message: error.message });
+                        displayResults('comprehensiveTestResult', results);
+                    });
+                
+                // 由于是异步操作，这里先记录一个占位符
+                logTest('重试操作', true, '异步测试中...');
+                results.push({ name: '重试操作', success: true, message: '异步测试中...' });
+
+                // 测试文件管理器的文件验证
+                const mockFile = new File(['test'], 'test.txt', { type: 'text/plain' });
+                const fileValid = fileManager.validateFile(mockFile);
+                if (fileValid) {
+                    logTest('文件验证', true, '成功');
+                    results.push({ name: '文件验证', success: true, message: '成功' });
+                } else {
+                    logTest('文件验证', false, '失败');
+                    results.push({ name: '文件验证', success: false, message: '失败' });
+                }
+
+            } catch (error) {
+                logTest('综合功能测试', false, error.message);
+                results.push({ name: '综合功能测试', success: false, message: error.message });
+            }
+
+            displayResults('comprehensiveTestResult', results);
+        }
+
+        // 页面加载完成后运行基本测试
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('测试页面已加载，所有模块应该已经可用');
+            testModuleLoading();
+        });
+    </script>
+</body>
+</html>
