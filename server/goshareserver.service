@@ -1,0 +1,27 @@
+[Unit]
+Description=goshareserver
+
+# 在网络服务启动后再启动本程序
+After=network.target  
+
+[Service]
+# 程序类型，通常是 simple（前台运行）或 forking（传统守护进程）
+Type=simple   
+ 
+# 建议使用非 root 用户运行，提升安全性 
+User=root        
+Group=root
+
+# 程序的启动命令（必须是绝对路径）
+WorkingDirectory=/root/goshare
+ExecStart=/root/goshare/goshare
+
+# 当程序异常退出时自动重启
+Restart=always      
+
+# 自动重启前等待 5 秒
+RestartSec=5           
+
+[Install]
+# 表示在多用户环境下（即正常启动后）启用该服务
+WantedBy=multi-user.target  
