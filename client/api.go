@@ -132,7 +132,7 @@ func normalizeAddr(server string) (string, error) {
 		return "", fmt.Errorf("server address empty")
 	}
 	if !strings.Contains(server, ":") {
-		server = server + ":9000"
+		server = server + ":6000"
 	}
 	return server, nil
 }

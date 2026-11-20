@@ -34,8 +34,8 @@ func (ui *UI) Run() {
 	preferences.SetBool("first_run", false)
 
 	serverEntry := widget.NewEntry()
-	serverEntry.SetPlaceHolder("123.60.47.228:9000")
-	serverEntry.SetText("123.60.47.228:9000")
+	serverEntry.SetPlaceHolder("119.96.24.44:6000")
+	serverEntry.SetText("119.96.24.44:6000")
 
 	pathEntry := widget.NewEntry()
 	pathEntry.SetPlaceHolder(".")

@@ -48,11 +48,29 @@ type Response struct {
 }
 
 func main() {
-	addr := flag.String("addr", ":9000", "server address")
+	addr := flag.String("addr", ":6000", "tcp server address")
+	httpAddr := flag.String("http", ":6001", "http file browser address (empty to disable)")
 	storage := flag.String("storage", "./storage", "storage root folder")
 	flag.Parse()
 
-	if err := os.MkdirAll(*storage, 0755); err != nil {
+	storageExplicit := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "storage" {
+			storageExplicit = true
+		}
+	})
+
+	storageRoot := *storage
+	if !storageExplicit {
+		storageRoot = detectStorageRoot(storageRoot)
+	}
+	storageAbs, err := filepath.Abs(storageRoot)
+	if err != nil {
+		log.Fatalf("resolve storage path: %v", err)
+	}
+	storageRoot = storageAbs
+
+	if err := os.MkdirAll(storageRoot, 0755); err != nil {
 		log.Fatalf("create storage path: %v", err)
 	}
 
@@ -61,7 +79,11 @@ func main() {
 		log.Fatalf("listen failed: %v", err)
 	}
 	defer ln.Close()
-	fmt.Printf("server on %s, storage=%s\n", *addr, *storage)
+	fmt.Printf("server on %s, storage=%s (%d items)\n", *addr, storageRoot, countDirEntries(storageRoot))
+
+	if *httpAddr != "" {
+		go startHTTPServer(*httpAddr, storageRoot)
+	}
 
 	for {
 		conn, err := ln.Accept()
@@ -69,8 +91,53 @@ func main() {
 			log.Println("accept error:", err)
 			continue
 		}
-		go handleConn(conn, *storage)
+		go handleConn(conn, storageRoot)
 	}
+}
+
+// detectStorageRoot 在未显式指定 -storage 时自动寻找存放文件的 storage 目录，
+// 避免从 server 子目录或快捷方式启动时把 ./storage 解析到错误位置。
+func detectStorageRoot(fallback string) string {
+	candidates := []string{fallback}
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		candidates = append(candidates,
+			filepath.Join(exeDir, "storage"),
+			filepath.Join(filepath.Dir(exeDir), "storage"),
+		)
+	}
+	if cwd, err := os.Getwd(); err == nil {
+		candidates = append(candidates,
+			filepath.Join(cwd, "storage"),
+			filepath.Join(filepath.Dir(cwd), "storage"),
+		)
+	}
+
+	firstExisting := ""
+	for _, c := range candidates {
+		fi, err := os.Stat(c)
+		if err != nil || !fi.IsDir() {
+			continue
+		}
+		if firstExisting == "" {
+			firstExisting = c
+		}
+		if countDirEntries(c) > 0 {
+			return c
+		}
+	}
+	if firstExisting != "" {
+		return firstExisting
+	}
+	return fallback
+}
+
+func countDirEntries(dir string) int {
+	infos, err := os.ReadDir(dir)
+	if err != nil {
+		return 0
+	}
+	return len(infos)
 }
 
 func absPath(root, rel string) (string, error) {
